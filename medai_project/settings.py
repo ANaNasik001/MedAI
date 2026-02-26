@@ -135,8 +135,3 @@ if not DEBUG:
 import cloudinary.uploader
 import cloudinary.api
 
-cloudinary.config(
-    cloud_name = "Root",
-    api_key = "773769543559461",
-    api_secret = "IVrE2qBJvhcPtAyhRC4SjQG5bdA"
-)
