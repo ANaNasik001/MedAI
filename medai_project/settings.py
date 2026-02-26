@@ -131,3 +131,12 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
+cloudinary.config(
+    cloud_name = "Root",
+    api_key = "773769543559461",
+    api_secret = "IVrE2qBJvhcPtAyhRC4SjQG5bdA"
+)

@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 import uuid
+from cloudinary.models import CloudinaryField
+from django.utils import timezone
 
 class Product(models.Model):
     CATEGORY_CHOICES = [
@@ -19,10 +21,10 @@ class Product(models.Model):
     icon = models.CharField(max_length=50, default='fas fa-pills', verbose_name='Иконка Font Awesome')
     stock = models.IntegerField(default=0, verbose_name='Количество на складе')
     
-    # ДОБАВЛЕНО: Поле для фотографии товара
-    image = models.ImageField(
-        upload_to='products/',
-        verbose_name='Фотография товара',
+    # ИЗМЕНЕНО: Поле для фотографии товара с использованием Cloudinary
+    image = CloudinaryField(
+        'image',
+        folder='products/',  # Папка в Cloudinary
         blank=True,
         null=True,
         help_text='Загрузите фотографию товара'
@@ -37,9 +39,9 @@ class Product(models.Model):
     def __str__(self):
         return f"{self.name} - {self.price} ₸"
     
-    # ДОБАВЛЕНО: Метод для получения URL изображения или заглушки
+    # ИЗМЕНЕНО: Метод для получения URL изображения или заглушки
     def get_image_url(self):
-        if self.image and hasattr(self.image, 'url'):
+        if self.image:
             return self.image.url
         return '/static/images/no-image.png'  # Заглушка если нет фото
 
@@ -329,9 +331,6 @@ class DoctorTimeSlot(models.Model):
         booked = "забронирован" if self.is_booked else "свободен"
         return f"{self.doctor.user.get_full_name()} - {self.date} {self.start_time} ({booked})"
 
-from django.utils import timezone
-from django.contrib.auth.models import User
-from django.db import models
 
 class MedicalCertificate(models.Model):
     STATUS_CHOICES = [
@@ -350,12 +349,9 @@ class MedicalCertificate(models.Model):
     ]
 
     patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='certificates', verbose_name='Пациент')
-    # если у тебя DoctorProfile называется иначе — скажешь, поменяем
-    doctor = models.ForeignKey('DoctorProfile', on_delete=models.SET_NULL, null=True, blank=True,
+    doctor = models.ForeignKey(DoctorProfile, on_delete=models.SET_NULL, null=True, blank=True,
                                related_name='issued_certificates', verbose_name='Врач')
-
-    # если у тебя Consultation называется иначе — скажешь, поменяем
-    consultation = models.ForeignKey('Consultation', on_delete=models.SET_NULL, null=True, blank=True,
+    consultation = models.ForeignKey(Consultation, on_delete=models.SET_NULL, null=True, blank=True,
                                      related_name='certificates', verbose_name='Консультация')
 
     certificate_type = models.CharField(max_length=30, choices=TYPE_CHOICES, verbose_name='Тип справки')
@@ -381,6 +377,7 @@ class MedicalCertificate(models.Model):
         self.status = 'issued'
         self.issued_at = timezone.now()
 
+
 # Сигналы для автоматического создания временных слотов
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -392,4 +389,3 @@ def create_time_slots(sender, instance, created, **kwargs):
     if created:
         # В реальном проекте здесь можно создать слоты на ближайшие недели
         pass
-    
